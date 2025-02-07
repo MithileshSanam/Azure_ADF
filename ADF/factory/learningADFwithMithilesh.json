@@ -1,0 +1,9 @@
+{
+	"name": "learningADFwithMithilesh",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "a08f0652-3810-4fc0-9aa9-b98752532634",
+		"tenantId": "3be72309-753e-456b-8eb9-f3909c60e1e8"
+	}
+}
