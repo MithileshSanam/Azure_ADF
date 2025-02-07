@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy_j9x",
+				"name": "Unzip and copy",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -49,13 +49,13 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "SourceDataset_j9x",
+						"referenceName": "UnzipCopy_Source",
 						"type": "DatasetReference"
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "DestinationDataset_j9x",
+						"referenceName": "UnzipCopy_destination",
 						"type": "DatasetReference"
 					}
 				]

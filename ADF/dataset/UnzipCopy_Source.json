@@ -1,9 +1,12 @@
 {
-	"name": "SourceDataset_j9x",
+	"name": "UnzipCopy_Source",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureDataLakeStorage1",
 			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Unzip Datasets"
 		},
 		"annotations": [],
 		"type": "Binary",
