@@ -203,13 +203,16 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DestinationDataset_j9x')]",
+			"name": "[concat(parameters('factoryName'), '/UnzipCopy_destination')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "AzureDataLakeStorage1",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Unzip Datasets"
 				},
 				"annotations": [],
 				"type": "Binary",
@@ -225,13 +228,16 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/SourceDataset_j9x')]",
+			"name": "[concat(parameters('factoryName'), '/UnzipCopy_Source')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
 					"referenceName": "AzureDataLakeStorage1",
 					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Unzip Datasets"
 				},
 				"annotations": [],
 				"type": "Binary",
@@ -257,7 +263,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Copy_j9x",
+						"name": "Unzip and copy",
 						"type": "Copy",
 						"dependsOn": [],
 						"policy": {
@@ -303,14 +309,14 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "SourceDataset_j9x",
+								"referenceName": "UnzipCopy_Source",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "DestinationDataset_j9x",
+								"referenceName": "UnzipCopy_destination",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
@@ -323,8 +329,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/SourceDataset_j9x')]",
-				"[concat(variables('factoryId'), '/datasets/DestinationDataset_j9x')]"
+				"[concat(variables('factoryId'), '/datasets/UnzipCopy_Source')]",
+				"[concat(variables('factoryId'), '/datasets/UnzipCopy_destination')]"
 			]
 		}
 	]
