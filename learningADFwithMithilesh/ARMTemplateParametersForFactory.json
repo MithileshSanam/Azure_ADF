@@ -4,6 +4,12 @@
 	"parameters": {
 		"factoryName": {
 			"value": "learningADFwithMithilesh"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"value": ""
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"value": "https://mithiadls.dfs.core.windows.net/"
 		}
 	}
 }
