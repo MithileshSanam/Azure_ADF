@@ -27,4 +27,10 @@
     b. These parameters can be access for any pipeline using the linked service.  
     c. Whenever the linked service is utilised, values need to be provided for the same
    <img width="584" alt="Screenshot 2025-02-08 at 11 55 02 AM" src="https://github.com/user-attachments/assets/8c304664-9d5e-4645-a5f6-bdda7f0c6b20" />  
-    
+6. Global Parameters:
+   a. Global parameters are created at ADF level.
+   b. This allows to use the parameters for any pipeline
+   c. To create a global variable, navigate to Manage Tab and click on global parameters. Click add to add a parameter
+   <img width="1307" alt="Screenshot 2025-02-08 at 12 06 02 PM" src="https://github.com/user-attachments/assets/065e2e81-c53d-4e2c-a348-3a11d0f26518" />  
+    d. It can be utilised in any pipeline just like a pipeline parameter
+   <img width="882" alt="Screenshot 2025-02-08 at 12 07 49 PM" src="https://github.com/user-attachments/assets/61c72cd6-22f2-4565-8239-11a1f7337c14" />
