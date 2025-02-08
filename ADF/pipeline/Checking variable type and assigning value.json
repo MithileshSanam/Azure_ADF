@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(variables('var_type'),'String')",
+						"value": "@contains(variables('var_type'),'String')",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
@@ -132,10 +132,19 @@
 				"userProperties": [],
 				"typeProperties": {
 					"variableName": "var_type",
-					"value": "String"
+					"value": {
+						"value": "@concat(pipeline().globalParameters.prefix,' ',pipeline().parameters.DataType)",
+						"type": "Expression"
+					}
 				}
 			}
 		],
+		"parameters": {
+			"DataType": {
+				"type": "string",
+				"defaultValue": "String"
+			}
+		},
 		"variables": {
 			"var_type": {
 				"type": "String"
