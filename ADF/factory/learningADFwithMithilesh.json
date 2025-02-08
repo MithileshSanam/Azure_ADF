@@ -1,5 +1,13 @@
 {
 	"name": "learningADFwithMithilesh",
+	"properties": {
+		"globalParameters": {
+			"prefix": {
+				"type": "string",
+				"value": "DataType is"
+			}
+		}
+	},
 	"location": "eastus",
 	"identity": {
 		"type": "SystemAssigned",
