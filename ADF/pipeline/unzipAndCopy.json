@@ -50,7 +50,13 @@
 				"inputs": [
 					{
 						"referenceName": "UnzipCopy_Source",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"file_name": {
+								"value": "@pipeline().parameters.source_file_name",
+								"type": "Expression"
+							}
+						}
 					}
 				],
 				"outputs": [
@@ -61,6 +67,12 @@
 				]
 			}
 		],
+		"parameters": {
+			"source_file_name": {
+				"type": "string",
+				"defaultValue": "sampledata"
+			}
+		},
 		"annotations": []
 	}
 }

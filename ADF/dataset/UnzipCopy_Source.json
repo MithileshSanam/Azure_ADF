@@ -5,6 +5,11 @@
 			"referenceName": "AzureDataLakeStorage1",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"file_name": {
+				"type": "string"
+			}
+		},
 		"folder": {
 			"name": "Unzip Datasets"
 		},
@@ -13,7 +18,10 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "sampledata.zip",
+				"fileName": {
+					"value": "@concat(dataset().file_name,'.zip')",
+					"type": "Expression"
+				},
 				"fileSystem": "raw"
 			},
 			"compression": {
