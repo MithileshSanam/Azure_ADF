@@ -73,6 +73,20 @@
 				"defaultValue": "sampledata"
 			}
 		},
+		"variables": {
+			"newvar": {
+				"type": "Array"
+			},
+			"rfw4r": {
+				"type": "String"
+			},
+			"filename": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Copy_To_Bronze"
+		},
 		"annotations": []
 	}
 }
