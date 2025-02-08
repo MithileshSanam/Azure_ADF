@@ -1,1 +1,6 @@
-{}
+{
+	"prefix": {
+		"type": "string",
+		"value": "DataType is"
+	}
+}

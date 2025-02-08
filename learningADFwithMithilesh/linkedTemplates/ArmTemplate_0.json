@@ -40,7 +40,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"expression": {
-								"value": "@equals(variables('var_type'),'String')",
+								"value": "@contains(variables('var_type'),'String')",
 								"type": "Expression"
 							},
 							"ifFalseActivities": [
@@ -156,12 +156,21 @@
 						"userProperties": [],
 						"typeProperties": {
 							"variableName": "var_type",
-							"value": "String"
+							"value": {
+								"value": "@concat(pipeline().globalParameters.prefix,' ',pipeline().parameters.DataType)",
+								"type": "Expression"
+							}
 						}
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataType": {
+						"type": "string",
+						"defaultValue": "String"
+					}
 				},
 				"variables": {
 					"var_type": {
@@ -203,6 +212,43 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/UnzipCopy_Source')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"file_name": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Unzip Datasets"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@concat(dataset().file_name,'.zip')",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					},
+					"compression": {
+						"type": "ZipDeflate"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/UnzipCopy_destination')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -220,35 +266,6 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileSystem": "landing"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/UnzipCopy_Source')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureDataLakeStorage1",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Unzip Datasets"
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "sampledata.zip",
-						"fileSystem": "raw"
-					},
-					"compression": {
-						"type": "ZipDeflate"
 					}
 				}
 			},
@@ -311,7 +328,12 @@
 							{
 								"referenceName": "UnzipCopy_Source",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"file_name": {
+										"value": "@pipeline().parameters.source_file_name",
+										"type": "Expression"
+									}
+								}
 							}
 						],
 						"outputs": [
@@ -325,6 +347,12 @@
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"source_file_name": {
+						"type": "string",
+						"defaultValue": "sampledata"
+					}
 				},
 				"annotations": []
 			},
