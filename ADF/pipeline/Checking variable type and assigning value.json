@@ -162,6 +162,9 @@
 				"type": "Array"
 			}
 		},
+		"folder": {
+			"name": "Dummy"
+		},
 		"annotations": [],
 		"lastPublishTime": "2025-02-07T16:43:45Z"
 	},

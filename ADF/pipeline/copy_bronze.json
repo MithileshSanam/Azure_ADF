@@ -250,7 +250,7 @@
 			}
 		},
 		"folder": {
-			"name": "Copy_To_Bronze"
+			"name": "Dummy/Copy_To_Bronze"
 		},
 		"annotations": []
 	}

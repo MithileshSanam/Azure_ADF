@@ -1,5 +1,5 @@
 {
-	"name": "copy_bronze_copy1",
+	"name": "copy_ADLS_to_SQL",
 	"properties": {
 		"activities": [
 			{
@@ -163,6 +163,9 @@
 			"filename": {
 				"type": "String"
 			}
+		},
+		"folder": {
+			"name": "Dummy"
 		},
 		"annotations": []
 	}
