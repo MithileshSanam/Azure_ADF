@@ -13,6 +13,9 @@
 				"type": "string"
 			}
 		},
+		"folder": {
+			"name": "dummy/Unzip Datasets"
+		},
 		"annotations": [],
 		"type": "Json",
 		"typeProperties": {

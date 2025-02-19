@@ -11,7 +11,7 @@
 			}
 		},
 		"folder": {
-			"name": "Unzip Datasets"
+			"name": "dummy/Unzip Datasets"
 		},
 		"annotations": [],
 		"type": "Binary",

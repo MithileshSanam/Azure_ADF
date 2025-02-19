@@ -10,6 +10,9 @@
 				"type": "string"
 			}
 		},
+		"folder": {
+			"name": "dummy/Unzip Datasets"
+		},
 		"annotations": [],
 		"type": "AzureSqlTable",
 		"schema": [
