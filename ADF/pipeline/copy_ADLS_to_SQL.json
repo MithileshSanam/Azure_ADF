@@ -138,7 +138,7 @@
 							],
 							"outputs": [
 								{
-									"referenceName": "AzureSqlTable1",
+									"referenceName": "entityIngestion",
 									"type": "DatasetReference",
 									"parameters": {
 										"table_name": {
@@ -161,6 +161,9 @@
 		},
 		"variables": {
 			"filename": {
+				"type": "String"
+			},
+			"ch": {
 				"type": "String"
 			}
 		},

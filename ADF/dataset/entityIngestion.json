@@ -1,5 +1,5 @@
 {
-	"name": "AzureSqlTable1",
+	"name": "entityIngestion",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "AzureSqlDatabase1",
@@ -9,9 +9,6 @@
 			"table_name": {
 				"type": "string"
 			}
-		},
-		"folder": {
-			"name": "dummy/Unzip Datasets"
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",

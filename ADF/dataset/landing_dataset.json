@@ -13,9 +13,6 @@
 				"type": "string"
 			}
 		},
-		"folder": {
-			"name": "dummy/Unzip Datasets"
-		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
@@ -26,7 +23,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat('source_data/',dataset().entity)",
+					"value": "@concat(concat(dataset().entity,'/'),utcNow())",
 					"type": "Expression"
 				},
 				"fileSystem": "landing"
