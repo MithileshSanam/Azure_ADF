@@ -11,9 +11,25 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
 		},
+		"AzureSqlDatabase1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'AzureSqlDatabase1'"
+		},
 		"AzureDataLakeStorage1_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://mithiadls.dfs.core.windows.net/"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "mithis.database.windows.net"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "mithidb"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "mithiadmin"
 		}
 	},
 	"variables": {
@@ -189,6 +205,9 @@
 						"type": "Array"
 					}
 				},
+				"folder": {
+					"name": "Dummy"
+				},
 				"annotations": [],
 				"lastPublishTime": "2025-02-07T16:43:45Z"
 			},
@@ -341,7 +360,7 @@
 													"type": "Expression"
 												},
 												"file_name": {
-													"value": "@first(split(item().name,'.'))",
+													"value": "@variables('filename')",
 													"type": "Expression"
 												}
 											}
@@ -451,7 +470,7 @@
 					}
 				},
 				"folder": {
-					"name": "Copy_To_Bronze"
+					"name": "Dummy/Copy_To_Bronze"
 				},
 				"annotations": []
 			},
@@ -460,6 +479,188 @@
 				"[concat(variables('factoryId'), '/datasets/landing_dataset')]",
 				"[concat(variables('factoryId'), '/datasets/bronze_dataset')]",
 				"[concat(variables('factoryId'), '/datasets/bronze_dataset_backup_csv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/copy_ADLS_to_SQL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get List Of Files",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "GetLandingMetadataDataset",
+								"type": "DatasetReference",
+								"parameters": {
+									"entity": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get List Of Files",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get List Of Files').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Set variable1",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "filename",
+										"value": {
+											"value": "@first(split(item().name,'.'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "BronzeCsvCopy",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Set variable1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "landing_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"file_name": {
+													"value": "@variables('filename')",
+													"type": "Expression"
+												},
+												"entity": {
+													"value": "@pipeline().parameters.entity",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "AzureSqlTable1",
+											"type": "DatasetReference",
+											"parameters": {
+												"table_name": {
+													"value": "@pipeline().parameters.entity",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"entity": {
+						"type": "string",
+						"defaultValue": "Arancione"
+					}
+				},
+				"variables": {
+					"filename": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Dummy"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/GetLandingMetadataDataset')]",
+				"[concat(variables('factoryId'), '/datasets/landing_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]"
 			]
 		},
 		{
@@ -555,13 +756,88 @@
 					}
 				},
 				"folder": {
-					"name": "Copy_To_Bronze"
+					"name": "Dummy/Copy_To_Bronze"
 				},
 				"annotations": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/UnzipCopy_Source')]",
 				"[concat(variables('factoryId'), '/datasets/UnzipCopy_destination')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"table_name": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "dummy/Unzip Datasets"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ArancioneID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "OnlineRetailer",
+						"type": "varchar"
+					},
+					{
+						"name": "SalesMonth",
+						"type": "date"
+					},
+					{
+						"name": "Title",
+						"type": "varchar"
+					},
+					{
+						"name": "Vintage",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Variety",
+						"type": "varchar"
+					},
+					{
+						"name": "Score",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ListPrice",
+						"type": "decimal",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": {
+						"value": "@dataset().table_name",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]"
 			]
 		},
 		{
@@ -577,6 +853,9 @@
 					"entity": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "dummy/Unzip Datasets"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -648,7 +927,7 @@
 					}
 				},
 				"folder": {
-					"name": "Unzip Datasets"
+					"name": "dummy/Unzip Datasets"
 				},
 				"annotations": [],
 				"type": "Binary",
@@ -680,7 +959,7 @@
 					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "Unzip Datasets"
+					"name": "dummy/Unzip Datasets"
 				},
 				"annotations": [],
 				"type": "Binary",
@@ -711,6 +990,9 @@
 					"file_name": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "dummy/Unzip Datasets"
 				},
 				"annotations": [],
 				"type": "Json",
@@ -750,6 +1032,9 @@
 					"file_name": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "dummy/Unzip Datasets"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -794,6 +1079,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "dummy/Unzip Datasets"
+				},
 				"annotations": [],
 				"type": "DelimitedText",
 				"typeProperties": {
@@ -832,6 +1120,28 @@
 					"accountKey": {
 						"type": "SecureString",
 						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('AzureSqlDatabase1_properties_typeProperties_server')]",
+					"database": "[parameters('AzureSqlDatabase1_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('AzureSqlDatabase1_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('AzureSqlDatabase1_password')]"
 					}
 				}
 			},
