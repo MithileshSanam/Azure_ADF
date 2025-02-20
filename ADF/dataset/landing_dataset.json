@@ -23,7 +23,7 @@
 					"type": "Expression"
 				},
 				"folderPath": {
-					"value": "@concat(concat(dataset().entity,'/'),utcNow())",
+					"value": "@dataset().entity",
 					"type": "Expression"
 				},
 				"fileSystem": "landing"

@@ -5,7 +5,14 @@
 			{
 				"name": "getEntityNames",
 				"type": "Lookup",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "If Condition1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -17,7 +24,10 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "SELECT entityName FROM [dbo].[Entity]",
+						"sqlReaderQuery": {
+							"value": "@variables('query')",
+							"type": "Expression"
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -115,10 +125,62 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@empty(pipeline().parameters.entity)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "query_false",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "query",
+								"value": {
+									"value": "@concat('select entityName from [dbo].[Entity] where entityName = ''', pipeline().parameters.entity, '''')",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "query_true",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "query",
+								"value": "SELECT entityName FROM [dbo].[Entity]"
+							}
+						}
+					]
+				}
 			}
 		],
+		"parameters": {
+			"entity": {
+				"type": "string"
+			}
+		},
 		"variables": {
-			"ch": {
+			"query": {
 				"type": "String"
 			}
 		},
