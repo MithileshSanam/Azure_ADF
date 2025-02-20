@@ -76,15 +76,12 @@
 									"partitionOption": "None"
 								},
 								"sink": {
-									"type": "DelimitedTextSink",
+									"type": "ParquetSink",
 									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings",
-										"copyBehavior": "PreserveHierarchy"
+										"type": "AzureBlobFSWriteSettings"
 									},
 									"formatSettings": {
-										"type": "DelimitedTextWriteSettings",
-										"quoteAllText": true,
-										"fileExtension": ".txt"
+										"type": "ParquetWriteSettings"
 									}
 								},
 								"enableStaging": false,
@@ -111,14 +108,13 @@
 							],
 							"outputs": [
 								{
-									"referenceName": "landing_dataset",
+									"referenceName": "LandingDataset_Parquet",
 									"type": "DatasetReference",
 									"parameters": {
-										"file_name": {
+										"entity_name": {
 											"value": "@item().entityName",
 											"type": "Expression"
-										},
-										"entity": "@item().entityName"
+										}
 									}
 								}
 							]
