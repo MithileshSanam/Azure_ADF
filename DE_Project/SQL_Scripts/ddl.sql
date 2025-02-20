@@ -47,7 +47,8 @@ CREATE TABLE [dbo].[Celeste] (
 
 CREATE TABLE [dbo].[pipelineRunDetail]
 (
-    pipelinerunId INT PRIMARY KEY IDENTITY(1,1),  
+    pipelinerunId INT PRIMARY KEY IDENTITY(1,1),
+	entityID INT,  
     pipelineName NVARCHAR(255),
 	pipelineId NVARCHAR(50),
 	runStage NVARCHAR(50),
@@ -60,9 +61,6 @@ CREATE TABLE [dbo].[pipelineRunDetail]
     lastUpdated DATETIME DEFAULT GETDATE()
 );
 
-
-
-
 CREATE PROCEDURE [dbo].[InsertPipelineRunDetail]
     @pipelineName NVARCHAR(255),
     @pipelineId NVARCHAR(50),
@@ -71,11 +69,18 @@ CREATE PROCEDURE [dbo].[InsertPipelineRunDetail]
     @loadType VARCHAR(50),
     @runStartTime DATETIME,
     @runEndTime DATETIME,
+    @entityName NVARCHAR(255), 
     @errorMessage NVARCHAR(MAX)
 AS
 BEGIN
+    DECLARE @entityID INT;
+    SELECT @entityID = entityID
+    FROM [dbo].[Entity]
+    WHERE entityName = @entityName;
+
     DECLARE @durationInSeconds INT;
     SET @durationInSeconds = DATEDIFF(SECOND, @runStartTime, @runEndTime);
+
     INSERT INTO [dbo].[pipelineRunDetail]
     (
         pipelineName,
@@ -86,6 +91,7 @@ BEGIN
         runStartTime,
         runEndTime,
         durationInSeconds,
+        entityId,
         errorMessage
     )
     VALUES
@@ -98,6 +104,8 @@ BEGIN
         @runStartTime,
         @runEndTime,
         @durationInSeconds,
+        @entityId,
         @errorMessage
     );
 END;
+
