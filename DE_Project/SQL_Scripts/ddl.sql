@@ -23,7 +23,8 @@ CREATE TABLE [dbo].[Arancione] (
     Variety VARCHAR(100),                 
     Score INT,                            
     ListPrice DECIMAL(10, 2),               
-    Quantity INT                             
+    Quantity INT,
+    lastUpdateDate DATETIME DEFAULT GETDATE()
 );
 
 
@@ -39,5 +40,64 @@ CREATE TABLE [dbo].[Celeste] (
     Variety VARCHAR(100),                       
     Score INT,                                  
     ListPrice DECIMAL(10, 2),                  
-    Quantity INT                           
+    Quantity INT,
+    lastUpdateDate DATETIME DEFAULT GETDATE()
 );
+
+
+CREATE TABLE [dbo].[pipelineRunDetail]
+(
+    pipelinerunId INT PRIMARY KEY IDENTITY(1,1),  
+    pipelineName NVARCHAR(255),
+	pipelineId NVARCHAR(50),
+	runStage NVARCHAR(50),
+    runStatus NVARCHAR(50),
+	loadType VARCHAR(50),      
+    runStartTime DATETIME,           
+    runEndTime DATETIME,            
+    durationInSeconds INT,           
+    errorMessage NVARCHAR(MAX),      
+    lastUpdated DATETIME DEFAULT GETDATE()
+);
+
+
+
+
+CREATE PROCEDURE [dbo].[InsertPipelineRunDetail]
+    @pipelineName NVARCHAR(255),
+    @pipelineId NVARCHAR(50),
+    @runStage NVARCHAR(50),
+    @runStatus NVARCHAR(50),
+    @loadType VARCHAR(50),
+    @runStartTime DATETIME,
+    @runEndTime DATETIME,
+    @errorMessage NVARCHAR(MAX)
+AS
+BEGIN
+    DECLARE @durationInSeconds INT;
+    SET @durationInSeconds = DATEDIFF(SECOND, @runStartTime, @runEndTime);
+    INSERT INTO [dbo].[pipelineRunDetail]
+    (
+        pipelineName,
+        pipelineId,
+        runStage,
+        runStatus,
+        loadType,
+        runStartTime,
+        runEndTime,
+        durationInSeconds,
+        errorMessage
+    )
+    VALUES
+    (
+        @pipelineName,
+        @pipelineId,
+        @runStage,
+        @runStatus,
+        @loadType,
+        @runStartTime,
+        @runEndTime,
+        @durationInSeconds,
+        @errorMessage
+    );
+END;
