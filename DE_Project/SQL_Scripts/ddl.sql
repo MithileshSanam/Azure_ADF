@@ -109,3 +109,30 @@ BEGIN
     );
 END;
 
+CREATE PROCEDURE [dbo].[UpdatePipelineRunDetail]
+    @pipelineName NVARCHAR(255),
+    @pipelineId NVARCHAR(50),
+    @runStatus NVARCHAR(50),
+    @runEndTime DATETIME,
+    @errorMessage NVARCHAR(MAX)
+AS
+BEGIN
+	DECLARE @runStartTime DATETIME;
+	SELECT @runStartTime = runStartTime
+	from [dbo].[pipelineRunDetail]
+	WHERE pipelineName = @pipelineName
+      AND pipelineId = @pipelineId;
+
+    DECLARE @durationInSeconds INT;
+    SET @durationInSeconds = DATEDIFF(SECOND, @runStartTime, @runEndTime);
+
+    UPDATE [dbo].[pipelineRunDetail]
+    SET
+        runStatus = @runStatus,
+        runEndTime = @runEndTime,
+        durationInSeconds = @durationInSeconds,
+        errorMessage = @errorMessage
+    WHERE
+        pipelineName = @pipelineName
+        AND pipelineId = @pipelineId;
+END;
