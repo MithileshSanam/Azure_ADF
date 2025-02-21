@@ -109,7 +109,7 @@
 						},
 						"pipelineId": {
 							"value": {
-								"value": "@pipeline().RunId",
+								"value": "@pipeline()?.TriggeredByPipelineRunId",
 								"type": "Expression"
 							},
 							"type": "String"
@@ -208,7 +208,7 @@
 						},
 						"pipelineId": {
 							"value": {
-								"value": "@pipeline().RunId",
+								"value": "@pipeline()?.TriggeredByPipelineRunId",
 								"type": "Expression"
 							},
 							"type": "String"
@@ -269,7 +269,7 @@
 						},
 						"pipelineId": {
 							"value": {
-								"value": "@pipeline().RunId",
+								"value": "@pipeline()?.TriggeredByPipelineRunId",
 								"type": "Expression"
 							},
 							"type": "String"
