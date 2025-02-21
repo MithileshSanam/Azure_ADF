@@ -122,7 +122,7 @@
 							"type": "String"
 						},
 						"runEndTime": {
-							"value": "",
+							"value": null,
 							"type": "DateTime"
 						},
 						"runStage": {
@@ -261,7 +261,10 @@
 					"storedProcedureName": "[dbo].[UpdatePipelineRunDetail]",
 					"storedProcedureParameters": {
 						"errorMessage": {
-							"value": "Error Occurred",
+							"value": {
+								"value": "@activity('LoadBronze').output.runError",
+								"type": "Expression"
+							},
 							"type": "String"
 						},
 						"pipelineId": {
