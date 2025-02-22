@@ -3,87 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "CopyFileSourceToLanding",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "start_file_landing_details",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "DelimitedTextSource",
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"wildcardFolderPath": {
-								"value": "@pipeline().parameters.entity",
-								"type": "Expression"
-							},
-							"wildcardFileName": "*.csv",
-							"enablePartitionDiscovery": false
-						},
-						"formatSettings": {
-							"type": "DelimitedTextReadSettings"
-						}
-					},
-					"sink": {
-						"type": "ParquetSink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings",
-							"copyBehavior": "MergeFiles"
-						},
-						"formatSettings": {
-							"type": "ParquetWriteSettings"
-						}
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "FileSource_CSV_Dataset",
-						"type": "DatasetReference",
-						"parameters": {
-							"entity_name": {
-								"value": "@pipeline().parameters.entity",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "LandingDataset_Parquet",
-						"type": "DatasetReference",
-						"parameters": {
-							"entity_name": {
-								"value": "@pipeline().parameters.entity",
-								"type": "Expression"
-							}
-						}
-					}
-				]
-			},
-			{
 				"name": "start_file_landing_details",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [],
@@ -234,7 +153,10 @@
 					"storedProcedureName": "[dbo].[UpdatePipelineRunDetail]",
 					"storedProcedureParameters": {
 						"errorMessage": {
-							"value": "Error Occured",
+							"value": {
+								"value": "@activity('CopyFileSourceToLanding').output.errors",
+								"type": "Expression"
+							},
 							"type": "String"
 						},
 						"pipelineId": {
@@ -268,11 +190,125 @@
 					"referenceName": "AzureSqlDatabase1",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "CopyFileSourceToLanding",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set Delimiter",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "@pipeline().parameters.entity",
+								"type": "Expression"
+							},
+							"wildcardFileName": "*.csv",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings",
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "FileSource_CSV_Dataset",
+						"type": "DatasetReference",
+						"parameters": {
+							"entity_name": {
+								"value": "@pipeline().parameters.entity",
+								"type": "Expression"
+							},
+							"delimiter": {
+								"value": "@variables('delimiter')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "LandingDataset_Parquet",
+						"type": "DatasetReference",
+						"parameters": {
+							"entity_name": {
+								"value": "@pipeline().parameters.entity",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Set Delimiter",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "start_file_landing_details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "delimiter",
+					"value": {
+						"value": "@if(equals(pipeline().parameters.entity,'Celeste_Products'),';',',')",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
 			"entity": {
 				"type": "string"
+			}
+		},
+		"variables": {
+			"delimiter": {
+				"type": "String"
 			}
 		},
 		"annotations": []

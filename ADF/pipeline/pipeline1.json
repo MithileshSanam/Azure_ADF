@@ -1,0 +1,19 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"parameters": {
+			"entity": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"delimiter": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Dummy"
+		},
+		"annotations": []
+	}
+}
