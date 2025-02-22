@@ -1,35 +1,13 @@
 {
-	"name": "SQL_Bronze_Ingestion",
+	"name": "Bronze_Ingestion",
 	"properties": {
 		"activities": [
-			{
-				"name": "SQL_To_Landing",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "DataBaseIngestion",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true,
-					"parameters": {
-						"entity": {
-							"value": "@pipeline().parameters.entity",
-							"type": "Expression"
-						}
-					}
-				}
-			},
 			{
 				"name": "Landing_To_Bronze",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "SQL_To_Landing",
+						"activity": "If Condition1",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -52,10 +30,73 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.ingestion_type,'SQL')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "File_To_Landing_ingestion",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "FileBasedIngestion",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"entity": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "SQL_To_Landing",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "DataBaseIngestion",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"entity": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
 			}
 		],
 		"parameters": {
 			"entity": {
+				"type": "string"
+			},
+			"ingestion_type": {
 				"type": "string"
 			}
 		},
