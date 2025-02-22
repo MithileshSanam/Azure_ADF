@@ -1011,6 +1011,264 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/GenericGoldIngestion')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "start_gold_details",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[InsertPipelineRunDetail]",
+							"storedProcedureParameters": {
+								"entityName": {
+									"value": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"errorMessage": {
+									"value": null,
+									"type": "String"
+								},
+								"loadType": {
+									"value": "Full Load",
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": null,
+									"type": "DateTime"
+								},
+								"runStage": {
+									"value": "Silver",
+									"type": "String"
+								},
+								"runStartTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Gold Started",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "LoadGold",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "start_gold_details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/mithileshadf@outlook.com/Azure_ADF/DE_Project/Databricks_Scripts/Gold_Ingestion",
+							"baseParameters": {
+								"entity_name": {
+									"value": "@pipeline().parameters.entity",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "End_Gold_details",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "LoadGold",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdatePipelineRunDetail]",
+							"storedProcedureParameters": {
+								"errorMessage": {
+									"value": null,
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Gold Completed",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "End_Gold_details_failed",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "LoadGold",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdatePipelineRunDetail]",
+							"storedProcedureParameters": {
+								"errorMessage": {
+									"value": {
+										"value": "@activity('LoadGold').output.error",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Gold Failed",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"entity": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"testvar": {
+						"type": "String"
+					},
+					"entity_filter_query": {
+						"type": "String"
+					},
+					"query": {
+						"type": "String"
+					},
+					"delimiter": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DataBaseIngestion')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1392,6 +1650,9 @@
 					},
 					"delimiter": {
 						"type": "String"
+					},
+					"ingestion_type": {
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -1727,6 +1988,9 @@
 					},
 					"delimiter": {
 						"type": "String"
+					},
+					"ingestion_type": {
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -1924,277 +2188,6 @@
 				"[concat(variables('factoryId'), '/datasets/GetLandingMetadataDataset')]",
 				"[concat(variables('factoryId'), '/datasets/landing_dataset')]",
 				"[concat(variables('factoryId'), '/datasets/entityIngestion')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/copy_bronze')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Get List Of Files",
-						"type": "GetMetadata",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "GetLandingMetadataDataset",
-								"type": "DatasetReference",
-								"parameters": {
-									"entity": {
-										"value": "@pipeline().parameters.entity",
-										"type": "Expression"
-									}
-								}
-							},
-							"fieldList": [
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "DelimitedTextReadSettings"
-							}
-						}
-					},
-					{
-						"name": "ForEach1",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get List Of Files",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Get List Of Files').output.childItems",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "Set variable1",
-									"type": "SetVariable",
-									"dependsOn": [],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "filename",
-										"value": {
-											"value": "@first(split(item().name,'.'))",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "BronzeJsonCopy",
-									"type": "Copy",
-									"dependsOn": [
-										{
-											"activity": "Set variable1",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "DelimitedTextSource",
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": true,
-												"enablePartitionDiscovery": false
-											},
-											"formatSettings": {
-												"type": "DelimitedTextReadSettings"
-											}
-										},
-										"sink": {
-											"type": "JsonSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings",
-												"copyBehavior": "PreserveHierarchy"
-											},
-											"formatSettings": {
-												"type": "JsonWriteSettings"
-											}
-										},
-										"enableStaging": false
-									},
-									"inputs": [
-										{
-											"referenceName": "landing_dataset",
-											"type": "DatasetReference",
-											"parameters": {
-												"file_name": {
-													"value": "@first(split(item().name,'.'))",
-													"type": "Expression"
-												},
-												"entity": {
-													"value": "@pipeline().parameters.entity",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "bronze_dataset",
-											"type": "DatasetReference",
-											"parameters": {
-												"entity": {
-													"value": "@pipeline().parameters.entity",
-													"type": "Expression"
-												},
-												"file_name": {
-													"value": "@variables('filename')",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								},
-								{
-									"name": "BronzeCsvCopy",
-									"type": "Copy",
-									"dependsOn": [
-										{
-											"activity": "Set variable1",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "DelimitedTextSource",
-											"storeSettings": {
-												"type": "AzureBlobFSReadSettings",
-												"recursive": true,
-												"enablePartitionDiscovery": false
-											},
-											"formatSettings": {
-												"type": "DelimitedTextReadSettings"
-											}
-										},
-										"sink": {
-											"type": "DelimitedTextSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "DelimitedTextWriteSettings",
-												"quoteAllText": true,
-												"fileExtension": ".txt"
-											}
-										},
-										"enableStaging": false,
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "landing_dataset",
-											"type": "DatasetReference",
-											"parameters": {
-												"file_name": {
-													"value": "@variables('filename')",
-													"type": "Expression"
-												},
-												"entity": {
-													"value": "@pipeline().parameters.entity",
-													"type": "Expression"
-												}
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "bronze_dataset_backup_csv",
-											"type": "DatasetReference",
-											"parameters": {
-												"entity": {
-													"value": "@pipeline().parameters.entity",
-													"type": "Expression"
-												},
-												"file_name": {
-													"value": "@variables('filename')",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"entity": {
-						"type": "string"
-					}
-				},
-				"variables": {
-					"filename": {
-						"type": "String"
-					},
-					"delimiter": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "Dummy/Copy_To_Bronze"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/GetLandingMetadataDataset')]",
-				"[concat(variables('factoryId'), '/datasets/landing_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/bronze_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/bronze_dataset_backup_csv')]"
 			]
 		}
 	]

@@ -603,6 +603,9 @@
 					},
 					"delimiter": {
 						"type": "String"
+					},
+					"ingestion_type": {
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -938,6 +941,9 @@
 					},
 					"delimiter": {
 						"type": "String"
+					},
+					"ingestion_type": {
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -987,11 +993,18 @@
 					{
 						"name": "If Condition1",
 						"type": "IfCondition",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "set ingestion_type",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"userProperties": [],
 						"typeProperties": {
 							"expression": {
-								"value": "@equals(pipeline().parameters.ingestion_type,'SQL')",
+								"value": "@equals(variables('ingestion_type'),'SQL')",
 								"type": "Expression"
 							},
 							"ifFalseActivities": [
@@ -1072,6 +1085,52 @@
 								}
 							}
 						}
+					},
+					{
+						"name": "set ingestion_type",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "ingestion_type",
+							"value": {
+								"value": "@if(endswith(pipeline().parameters.entity,'products'),'File','SQL')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Landing_To_Gold",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Landing_To_Silver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "GenericGoldIngestion",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"entity": {
+									"value": "@pipeline().parameters.entity",
+									"type": "Expression"
+								}
+							}
+						}
 					}
 				],
 				"policy": {
@@ -1088,6 +1147,9 @@
 				"variables": {
 					"delimiter": {
 						"type": "String"
+					},
+					"ingestion_type": {
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -1095,6 +1157,7 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/GenericBronzeIngestion')]",
 				"[concat(variables('factoryId'), '/pipelines/GenericSilverIngestion')]",
+				"[concat(variables('factoryId'), '/pipelines/GenericGoldIngestion')]",
 				"[concat(variables('factoryId'), '/pipelines/DataBaseIngestion')]",
 				"[concat(variables('factoryId'), '/pipelines/FileBasedIngestion')]"
 			]
@@ -1544,6 +1607,9 @@
 					},
 					"delimiter": {
 						"type": "String"
+					},
+					"ingestion_type": {
+						"type": "String"
 					}
 				},
 				"folder": {
@@ -1650,6 +1716,9 @@
 						"type": "String"
 					},
 					"delimiter": {
+						"type": "String"
+					},
+					"ingestion_type": {
 						"type": "String"
 					}
 				},
@@ -2468,6 +2537,9 @@
 				"variables": {
 					"delimiter": {
 						"type": "String"
+					},
+					"ingestion_type": {
+						"type": "String"
 					}
 				},
 				"annotations": []
@@ -2739,6 +2811,264 @@
 								},
 								"runStatus": {
 									"value": "Silver Failed",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"entity": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"testvar": {
+						"type": "String"
+					},
+					"entity_filter_query": {
+						"type": "String"
+					},
+					"query": {
+						"type": "String"
+					},
+					"delimiter": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDatabricks1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/GenericGoldIngestion')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "start_gold_details",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[InsertPipelineRunDetail]",
+							"storedProcedureParameters": {
+								"entityName": {
+									"value": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"errorMessage": {
+									"value": null,
+									"type": "String"
+								},
+								"loadType": {
+									"value": "Full Load",
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": null,
+									"type": "DateTime"
+								},
+								"runStage": {
+									"value": "Silver",
+									"type": "String"
+								},
+								"runStartTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Gold Started",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "LoadGold",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "start_gold_details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/mithileshadf@outlook.com/Azure_ADF/DE_Project/Databricks_Scripts/Gold_Ingestion",
+							"baseParameters": {
+								"entity_name": {
+									"value": "@pipeline().parameters.entity",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "End_Gold_details",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "LoadGold",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdatePipelineRunDetail]",
+							"storedProcedureParameters": {
+								"errorMessage": {
+									"value": null,
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Gold Completed",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "End_Gold_details_failed",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "LoadGold",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdatePipelineRunDetail]",
+							"storedProcedureParameters": {
+								"errorMessage": {
+									"value": {
+										"value": "@activity('LoadGold').output.error",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Gold Failed",
 									"type": "String"
 								}
 							}
