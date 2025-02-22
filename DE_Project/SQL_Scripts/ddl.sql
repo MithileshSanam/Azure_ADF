@@ -1,9 +1,7 @@
-create table [dbo].[IncrementalLoadMetadata](
+create table [dbo].[watermarkData](
 entityID INT,
-loadStartTime DATETIME,
-status VARCHAR(50),
-loadEndTime DATETIME,
-pipelineID VARCHAR(50),
+lastUpdateDate DATETIME,
+loadType VARCHAR(50),
 processID INT Primary Key Identity(1,1)
 );
 
