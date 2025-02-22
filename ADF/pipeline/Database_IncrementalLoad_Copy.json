@@ -139,6 +139,85 @@
 									"type": "Expression"
 								}
 							}
+						},
+						{
+							"name": "update WatermarkTable",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "getMaxWatermarkTS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[updateWatermarkData]",
+								"storedProcedureParameters": {
+									"entityName": {
+										"value": {
+											"value": "@item().entityName",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"lastUpdateDate": {
+										"value": {
+											"value": "@first(activity('getMaxWatermarkTS').output.value).max_ts",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "getMaxWatermarkTS",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "CopySQLtoLanding_Incremental",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat('SELECT max(lastUpdateDate) as max_ts FROM dbo.',item().entityName)",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "tableNames",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": false
+							}
 						}
 					]
 				}
@@ -151,6 +230,12 @@
 		},
 		"variables": {
 			"watermark_value": {
+				"type": "String"
+			},
+			"delete": {
+				"type": "String"
+			},
+			"delethisyeah": {
 				"type": "String"
 			}
 		},
