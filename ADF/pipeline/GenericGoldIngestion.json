@@ -230,20 +230,6 @@
 				"type": "string"
 			}
 		},
-		"variables": {
-			"testvar": {
-				"type": "String"
-			},
-			"entity_filter_query": {
-				"type": "String"
-			},
-			"query": {
-				"type": "String"
-			},
-			"delimiter": {
-				"type": "String"
-			}
-		},
 		"annotations": []
 	}
 }
