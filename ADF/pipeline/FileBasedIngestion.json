@@ -374,6 +374,59 @@
 									"type": "Expression"
 								}
 							}
+						},
+						{
+							"name": "update WatermarkTable",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "CopyFileSourceToLanding_IncrementalLoad",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[updateWatermarkData]",
+								"storedProcedureParameters": {
+									"entityName": {
+										"value": {
+											"value": "@pipeline().parameters.entity",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"lastUpdateDate": {
+										"value": {
+											"value": "@first(activity('getMaxWatermarkTS').output.value).max_ts",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Set current_ts",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": []
 						}
 					],
 					"ifTrueActivities": [
@@ -472,6 +525,15 @@
 				"type": "String"
 			},
 			"watermark_val": {
+				"type": "String"
+			},
+			"delethisyeah": {
+				"type": "String"
+			},
+			"file_all_ts": {
+				"type": "Array"
+			},
+			"max_ts": {
 				"type": "String"
 			}
 		},
