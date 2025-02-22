@@ -13,6 +13,564 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/GenericBronzeIngestion')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy_Landing_Bronze_Raw",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "start_bronze_details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "LandingDataset_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"entity_name": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "bronze_Parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"entity": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "start_bronze_details",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[InsertPipelineRunDetail]",
+							"storedProcedureParameters": {
+								"entityName": {
+									"value": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"errorMessage": {
+									"value": null,
+									"type": "String"
+								},
+								"loadType": {
+									"value": "Full Load",
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": null,
+									"type": "DateTime"
+								},
+								"runStage": {
+									"value": "Bronze",
+									"type": "String"
+								},
+								"runStartTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Bronze Started",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "LoadBronze",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "Copy_Landing_Bronze_Raw",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/mithileshadf@outlook.com/Azure_ADF/DE_Project/Databricks_Scripts/Bronze_Ingestion",
+							"baseParameters": {
+								"entity_name": {
+									"value": "@pipeline().parameters.entity",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureDatabricks1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "End_Bronze_details",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "LoadBronze",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdatePipelineRunDetail]",
+							"storedProcedureParameters": {
+								"errorMessage": {
+									"value": null,
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Bronze Completed",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "End_Bronze_details_failed",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "LoadBronze",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdatePipelineRunDetail]",
+							"storedProcedureParameters": {
+								"errorMessage": {
+									"value": {
+										"value": "@activity('LoadBronze').output.runError",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Bronze Failed",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "End_Bronze_details_failed_copy",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Copy_Landing_Bronze_Raw",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdatePipelineRunDetail]",
+							"storedProcedureParameters": {
+								"errorMessage": {
+									"value": {
+										"value": "@activity('Copy_Landing_Bronze_Raw').output.runError",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineId": {
+									"value": {
+										"value": "@pipeline()?.TriggeredByPipelineRunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"runEndTime": {
+									"value": {
+										"value": "@utcNow()",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"runStatus": {
+									"value": "Bronze Failed",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "AzureSqlDatabase1",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"entity": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/copy_ADLS_to_SQL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get List Of Files",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "GetLandingMetadataDataset",
+								"type": "DatasetReference",
+								"parameters": {
+									"entity": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get List Of Files",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get List Of Files').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Set variable1",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "filename",
+										"value": {
+											"value": "@first(split(item().name,'.'))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "BronzeCsvCopy",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Set variable1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "AzureSqlSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "landing_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"file_name": {
+													"value": "@variables('filename')",
+													"type": "Expression"
+												},
+												"entity": {
+													"value": "@pipeline().parameters.entity",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "entityIngestion",
+											"type": "DatasetReference",
+											"parameters": {
+												"table_name": {
+													"value": "@pipeline().parameters.entity",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"entity": {
+						"type": "string",
+						"defaultValue": "Arancione"
+					}
+				},
+				"variables": {
+					"filename": {
+						"type": "String"
+					},
+					"ch": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Dummy"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/copy_bronze')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -266,12 +824,6 @@
 				"variables": {
 					"filename": {
 						"type": "String"
-					},
-					"delimiter": {
-						"type": "String"
-					},
-					"ingestion_type": {
-						"type": "String"
 					}
 				},
 				"folder": {
@@ -371,12 +923,6 @@
 					},
 					"filename": {
 						"type": "String"
-					},
-					"delimiter": {
-						"type": "String"
-					},
-					"ingestion_type": {
-						"type": "String"
 					}
 				},
 				"folder": {
@@ -387,13 +933,104 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/FileBasedIngestion')]",
+			"name": "[concat(parameters('factoryName'), '/DataBaseIngestion')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "start_file_landing_details",
+						"name": "getEntityNames",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "If Condition1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "@variables('query')",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "tableNames",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "If Condition1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "start_landing_details",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@empty(pipeline().parameters.entity)",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "query_false",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "query",
+										"value": {
+											"value": "@concat('select entityID, entityName from [dbo].[Entity] where entityName = ''', pipeline().parameters.entity, '''')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "query_true",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "query",
+										"value": "SELECT entityID, entityName FROM [dbo].[Entity]"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "start_landing_details",
 						"type": "SqlServerStoredProcedure",
 						"dependsOn": [],
 						"policy": {
@@ -419,7 +1056,10 @@
 									"type": "String"
 								},
 								"loadType": {
-									"value": "Full Load",
+									"value": {
+										"value": "@pipeline().parameters.load_type",
+										"type": "Expression"
+									},
 									"type": "String"
 								},
 								"pipelineId": {
@@ -441,7 +1081,7 @@
 									"type": "DateTime"
 								},
 								"runStage": {
-									"value": "Copy_File_to_landing",
+									"value": "Copy_SQL_to_landing",
 									"type": "String"
 								},
 								"runStartTime": {
@@ -452,7 +1092,7 @@
 									"type": "DateTime"
 								},
 								"runStatus": {
-									"value": "Copy File To Landing Started",
+									"value": "Copy SQL To Landing Started",
 									"type": "String"
 								}
 							}
@@ -463,11 +1103,11 @@
 						}
 					},
 					{
-						"name": "End_File_Landing_details",
+						"name": "End_Landing_details",
 						"type": "SqlServerStoredProcedure",
 						"dependsOn": [
 							{
-								"activity": "CopyFileSourceToLanding",
+								"activity": "check load type",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -510,7 +1150,7 @@
 									"type": "DateTime"
 								},
 								"runStatus": {
-									"value": "Copy File To Landing Completed",
+									"value": "Copy SQL To Landing Completed",
 									"type": "String"
 								}
 							}
@@ -521,11 +1161,11 @@
 						}
 					},
 					{
-						"name": "End_File_Landing_details_failed",
+						"name": "End_Landing_details_failed",
 						"type": "SqlServerStoredProcedure",
 						"dependsOn": [
 							{
-								"activity": "CopyFileSourceToLanding",
+								"activity": "check load type",
 								"dependencyConditions": [
 									"Failed"
 								]
@@ -543,10 +1183,7 @@
 							"storedProcedureName": "[[dbo].[UpdatePipelineRunDetail]",
 							"storedProcedureParameters": {
 								"errorMessage": {
-									"value": {
-										"value": "@activity('CopyFileSourceToLanding').output.errors",
-										"type": "Expression"
-									},
+									"value": "Error Occured",
 									"type": "String"
 								},
 								"pipelineId": {
@@ -571,7 +1208,7 @@
 									"type": "DateTime"
 								},
 								"runStatus": {
-									"value": "Copy File To Landing Failed",
+									"value": "Copy SQL To Landing Failed",
 									"type": "String"
 								}
 							}
@@ -582,112 +1219,70 @@
 						}
 					},
 					{
-						"name": "CopyFileSourceToLanding",
-						"type": "Copy",
+						"name": "check load type",
+						"type": "IfCondition",
 						"dependsOn": [
 							{
-								"activity": "Set Delimiter",
+								"activity": "getEntityNames",
 								"dependencyConditions": [
 									"Succeeded"
 								]
 							}
 						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
 						"userProperties": [],
 						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"wildcardFolderPath": {
-										"value": "@pipeline().parameters.entity",
-										"type": "Expression"
-									},
-									"wildcardFileName": "*.csv",
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings",
-									"copyBehavior": "MergeFiles"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "FileSource_CSV_Dataset",
-								"type": "DatasetReference",
-								"parameters": {
-									"entity_name": {
-										"value": "@pipeline().parameters.entity",
-										"type": "Expression"
-									},
-									"delimiter": {
-										"value": "@variables('delimiter')",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "LandingDataset_Parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"entity_name": {
-										"value": "@pipeline().parameters.entity",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Set Delimiter",
-						"type": "SetVariable",
-						"dependsOn": [
-							{
-								"activity": "start_file_landing_details",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"variableName": "delimiter",
-							"value": {
-								"value": "@if(equals(pipeline().parameters.entity,'Celeste_Products'),';',',')",
+							"expression": {
+								"value": "@equals(pipeline().parameters.load_type,'Full Load')",
 								"type": "Expression"
-							}
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Execute IncrementalLoad",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Database_IncrementalLoad_Copy",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"entityNames": {
+												"value": "@activity('getEntityNames').output.value",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Execute FullLoadCopy",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Database_FullLoad_Copy",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"entityNames": {
+												"value": "@activity('getEntityNames').output.value",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
 						}
 					}
 				],
@@ -697,13 +1292,16 @@
 				"parameters": {
 					"entity": {
 						"type": "string"
+					},
+					"load_type": {
+						"type": "string"
 					}
 				},
 				"variables": {
-					"delimiter": {
+					"query": {
 						"type": "String"
 					},
-					"ingestion_type": {
+					"delimiter": {
 						"type": "String"
 					}
 				},
@@ -806,6 +1404,10 @@
 											"entity": {
 												"value": "@pipeline().parameters.entity",
 												"type": "Expression"
+											},
+											"load_type": {
+												"value": "@pipeline().parameters.load_type",
+												"type": "Expression"
 											}
 										}
 									}
@@ -896,7 +1498,7 @@
 					"entity": {
 						"type": "string"
 					},
-					"ingestion_type": {
+					"load_type": {
 						"type": "string"
 					}
 				},
@@ -911,7 +1513,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/FileBasedIngestion')]"
+				"[concat(variables('factoryId'), '/pipelines/GenericBronzeIngestion')]",
+				"[concat(variables('factoryId'), '/pipelines/DataBaseIngestion')]"
 			]
 		}
 	]
