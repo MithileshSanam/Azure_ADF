@@ -29,7 +29,10 @@
 							"type": "String"
 						},
 						"loadType": {
-							"value": "Full Load",
+							"value": {
+								"value": "@pipeline().parameters.load_type",
+								"type": "Expression"
+							},
 							"type": "String"
 						},
 						"pipelineId": {
@@ -153,10 +156,7 @@
 					"storedProcedureName": "[dbo].[UpdatePipelineRunDetail]",
 					"storedProcedureParameters": {
 						"errorMessage": {
-							"value": {
-								"value": "@activity('CopyFileSourceToLanding').output.errors",
-								"type": "Expression"
-							},
+							"value": "File Load Failed",
 							"type": "String"
 						},
 						"pipelineId": {
@@ -236,7 +236,14 @@
 						{
 							"name": "CopyFileSourceToLanding_IncrementalLoad",
 							"type": "Copy",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "Set watermarkValue",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -314,6 +321,59 @@
 									}
 								}
 							]
+						},
+						{
+							"name": "getWatermarkData",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat('select lastUpdateDate from dbo.watermarkData where entityID = (select entityID from dbo.Entity where entityName=''',pipeline().parameters.entity,''')')",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "tableNames",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "Set watermarkValue",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "getWatermarkData",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "watermark_val",
+								"value": {
+									"value": "@first(activity('getWatermarkData').output.value).lastUpdateDate",
+									"type": "Expression"
+								}
+							}
 						}
 					],
 					"ifTrueActivities": [
@@ -412,8 +472,7 @@
 				"type": "String"
 			},
 			"watermark_val": {
-				"type": "String",
-				"defaultValue": "2025-02-21T14:04:01.213Z"
+				"type": "String"
 			}
 		},
 		"annotations": []
