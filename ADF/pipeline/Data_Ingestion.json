@@ -1,5 +1,5 @@
 {
-	"name": "Bronze_Ingestion",
+	"name": "Data_Ingestion",
 	"properties": {
 		"activities": [
 			{
@@ -90,6 +90,35 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Landing_To_Silver",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Landing_To_Bronze",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "GenericSilverIngestion",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"entity": {
+							"value": "@pipeline().parameters.entity",
+							"type": "Expression"
+						}
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -98,6 +127,11 @@
 			},
 			"ingestion_type": {
 				"type": "string"
+			}
+		},
+		"variables": {
+			"delimiter": {
+				"type": "String"
 			}
 		},
 		"annotations": []
