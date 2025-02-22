@@ -5,6 +5,21 @@ loadType VARCHAR(50),
 processID INT Primary Key Identity(1,1)
 );
 
+create procedure [dbo].[updateWatermarkData]
+@entityName VARCHAR(50),
+@lastUpdateDate DATETIME
+AS
+BEGIN
+    DECLARE @entityID INT;
+    SELECT @entityID = entityID
+    FROM [dbo].[Entity]
+    WHERE entityName = @entityName;
+ UPDATE [dbo].[watermarkData]
+    SET
+        lastUpdateDate = @lastUpdateDate
+    WHERE
+        entityID = @entityID
+END;
 
 create table [dbo].[Entity](
 entityID INT Primary Key Identity(1,1),
