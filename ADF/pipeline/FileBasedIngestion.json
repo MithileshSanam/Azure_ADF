@@ -77,7 +77,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "CopyFileSourceToLanding",
+						"activity": "If Condition1",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -135,7 +135,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "CopyFileSourceToLanding",
+						"activity": "If Condition1",
 						"dependencyConditions": [
 							"Failed"
 						]
@@ -192,91 +192,6 @@
 				}
 			},
 			{
-				"name": "CopyFileSourceToLanding",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "Set Delimiter",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "DelimitedTextSource",
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"wildcardFolderPath": {
-								"value": "@pipeline().parameters.entity",
-								"type": "Expression"
-							},
-							"wildcardFileName": "*.csv",
-							"enablePartitionDiscovery": false
-						},
-						"formatSettings": {
-							"type": "DelimitedTextReadSettings"
-						}
-					},
-					"sink": {
-						"type": "ParquetSink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings",
-							"copyBehavior": "MergeFiles"
-						},
-						"formatSettings": {
-							"type": "ParquetWriteSettings"
-						}
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "FileSource_CSV_Dataset",
-						"type": "DatasetReference",
-						"parameters": {
-							"entity_name": {
-								"value": "@pipeline().parameters.entity",
-								"type": "Expression"
-							},
-							"delimiter": {
-								"value": "@variables('delimiter')",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "LandingDataset_Parquet",
-						"type": "DatasetReference",
-						"parameters": {
-							"entity_name": {
-								"value": "@pipeline().parameters.entity",
-								"type": "Expression"
-							}
-						}
-					}
-				]
-			},
-			{
 				"name": "Set Delimiter",
 				"type": "SetVariable",
 				"dependsOn": [
@@ -299,16 +214,206 @@
 						"type": "Expression"
 					}
 				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Set Delimiter",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.load_type,'Full Load')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "CopyFileSourceToLanding_IncrementalLoad",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"modifiedDatetimeStart": {
+											"value": "@variables('watermark_val')",
+											"type": "Expression"
+										},
+										"wildcardFolderPath": {
+											"value": "@pipeline().parameters.entity",
+											"type": "Expression"
+										},
+										"wildcardFileName": "*.csv",
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"copyBehavior": "MergeFiles"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "FileSource_CSV_Dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"entity_name": {
+											"value": "@pipeline().parameters.entity",
+											"type": "Expression"
+										},
+										"delimiter": {
+											"value": "@variables('delimiter')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "LandingDataset_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"entity_name": {
+											"value": "@pipeline().parameters.entity",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "CopyFileSourceToLanding_FullLoad",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"wildcardFolderPath": {
+											"value": "@pipeline().parameters.entity",
+											"type": "Expression"
+										},
+										"wildcardFileName": "*.csv",
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"copyBehavior": "MergeFiles"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "FileSource_CSV_Dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"entity_name": {
+											"value": "@pipeline().parameters.entity",
+											"type": "Expression"
+										},
+										"delimiter": {
+											"value": "@variables('delimiter')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "LandingDataset_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"entity_name": {
+											"value": "@pipeline().parameters.entity",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
 			}
 		],
 		"parameters": {
 			"entity": {
+				"type": "string"
+			},
+			"load_type": {
 				"type": "string"
 			}
 		},
 		"variables": {
 			"delimiter": {
 				"type": "String"
+			},
+			"watermark_val": {
+				"type": "String",
+				"defaultValue": "2025-02-21T14:04:01.213Z"
 			}
 		},
 		"annotations": []
