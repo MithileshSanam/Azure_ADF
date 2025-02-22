@@ -298,6 +298,67 @@
 					"referenceName": "AzureSqlDatabase1",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "End_Bronze_details_failed_copy",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Copy_Landing_Bronze_Raw",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpdatePipelineRunDetail]",
+					"storedProcedureParameters": {
+						"errorMessage": {
+							"value": {
+								"value": "@activity('Copy_Landing_Bronze_Raw').output.runError",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineId": {
+							"value": {
+								"value": "@pipeline()?.TriggeredByPipelineRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"pipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"runEndTime": {
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"runStatus": {
+							"value": "Bronze Failed",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabase1",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"parameters": {
@@ -313,6 +374,12 @@
 				"type": "String"
 			},
 			"query": {
+				"type": "String"
+			},
+			"delimiter": {
+				"type": "String"
+			},
+			"ingestion_type": {
 				"type": "String"
 			}
 		},

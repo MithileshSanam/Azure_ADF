@@ -177,9 +177,6 @@
 		"parameters": {
 			"entity": {
 				"type": "string"
-			},
-			"ingestion_type": {
-				"type": "string"
 			}
 		},
 		"variables": {
