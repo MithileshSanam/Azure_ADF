@@ -34,11 +34,18 @@
 			{
 				"name": "If Condition1",
 				"type": "IfCondition",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "set ingestion_type",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(pipeline().parameters.ingestion_type,'SQL')",
+						"value": "@equals(variables('ingestion_type'),'SQL')",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
@@ -119,6 +126,23 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "set ingestion_type",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ingestion_type",
+					"value": {
+						"value": "@if(endswith(pipeline().parameters.entity,'products'),'File','SQL')",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -131,6 +155,9 @@
 		},
 		"variables": {
 			"delimiter": {
+				"type": "String"
+			},
+			"ingestion_type": {
 				"type": "String"
 			}
 		},
