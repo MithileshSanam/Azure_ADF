@@ -39,90 +39,6 @@
 				}
 			},
 			{
-				"name": "ForEach1",
-				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "getEntityNames",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('getEntityNames').output.value",
-						"type": "Expression"
-					},
-					"isSequential": true,
-					"activities": [
-						{
-							"name": "CopySQLtoLanding",
-							"type": "Copy",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "AzureSqlSource",
-									"queryTimeout": "02:00:00",
-									"partitionOption": "None"
-								},
-								"sink": {
-									"type": "ParquetSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "ParquetWriteSettings"
-									}
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "entityIngestion",
-									"type": "DatasetReference",
-									"parameters": {
-										"table_name": {
-											"value": "@item().entityName",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "LandingDataset_Parquet",
-									"type": "DatasetReference",
-									"parameters": {
-										"entity_name": {
-											"value": "@item().entityName",
-											"type": "Expression"
-										}
-									}
-								}
-							]
-						}
-					]
-				}
-			},
-			{
 				"name": "If Condition1",
 				"type": "IfCondition",
 				"dependsOn": [
@@ -152,7 +68,7 @@
 							"typeProperties": {
 								"variableName": "query",
 								"value": {
-									"value": "@concat('select entityName from [dbo].[Entity] where entityName = ''', pipeline().parameters.entity, '''')",
+									"value": "@concat('select entityID, entityName from [dbo].[Entity] where entityName = ''', pipeline().parameters.entity, '''')",
 									"type": "Expression"
 								}
 							}
@@ -170,7 +86,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"variableName": "query",
-								"value": "SELECT entityName FROM [dbo].[Entity]"
+								"value": "SELECT entityID, entityName FROM [dbo].[Entity]"
 							}
 						}
 					]
@@ -203,7 +119,10 @@
 							"type": "String"
 						},
 						"loadType": {
-							"value": "Full Load",
+							"value": {
+								"value": "@pipeline().parameters.load_type",
+								"type": "Expression"
+							},
 							"type": "String"
 						},
 						"pipelineId": {
@@ -251,7 +170,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "ForEach1",
+						"activity": "check load type",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -309,7 +228,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "ForEach1",
+						"activity": "check load type",
 						"dependencyConditions": [
 							"Failed"
 						]
@@ -361,15 +280,82 @@
 					"referenceName": "AzureSqlDatabase1",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "check load type",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "getEntityNames",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.load_type,'Full Load')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Execute IncrementalLoad",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Database_IncrementalLoad_Copy",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"entityNames": "@activity('getEntityNames').output.value"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Execute FullLoadCopy",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Database_FullLoad_Copy",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"entityNames": "@activity('getEntityNames').output.value"
+								}
+							}
+						}
+					]
+				}
 			}
 		],
 		"parameters": {
 			"entity": {
 				"type": "string"
+			},
+			"load_type": {
+				"type": "string"
 			}
 		},
 		"variables": {
 			"query": {
+				"type": "String"
+			},
+			"delimiter": {
 				"type": "String"
 			}
 		},

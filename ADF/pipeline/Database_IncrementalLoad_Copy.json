@@ -1,0 +1,159 @@
+{
+	"name": "Database_IncrementalLoad_Copy",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach_Incremental Load",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.entityNames",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "CopySQLtoLanding_Incremental",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Set watermarkValue",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat('select * from dbo.',item().entityName, ' where lastUpdateDate>''',variables('watermark_value'),'''')",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "entityIngestion",
+									"type": "DatasetReference",
+									"parameters": {
+										"table_name": {
+											"value": "@item().entityName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "LandingDataset_Parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"entity_name": {
+											"value": "@item().entityName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "getWatermarkData",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat('select lastUpdateDate from dbo.watermarkData where entityID =',item().entityID)",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "tableNames",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "Set watermarkValue",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "getWatermarkData",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "watermark_value",
+								"value": {
+									"value": "@first(activity('getWatermarkData').output.value).lastUpdateDate",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"entityNames": {
+				"type": "array"
+			}
+		},
+		"variables": {
+			"watermark_value": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}

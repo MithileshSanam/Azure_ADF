@@ -91,6 +91,10 @@
 									"entity": {
 										"value": "@pipeline().parameters.entity",
 										"type": "Expression"
+									},
+									"load_type": {
+										"value": "@pipeline().parameters.load_type",
+										"type": "Expression"
 									}
 								}
 							}
@@ -176,6 +180,9 @@
 		],
 		"parameters": {
 			"entity": {
+				"type": "string"
+			},
+			"load_type": {
 				"type": "string"
 			}
 		},
