@@ -238,12 +238,6 @@
 		"variables": {
 			"watermark_value": {
 				"type": "String"
-			},
-			"delete": {
-				"type": "String"
-			},
-			"delethisyeah": {
-				"type": "String"
 			}
 		},
 		"annotations": []

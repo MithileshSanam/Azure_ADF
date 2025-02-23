@@ -314,7 +314,10 @@
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"entityNames": "@activity('getEntityNames').output.value"
+									"entityNames": {
+										"value": "@activity('getEntityNames').output.value",
+										"type": "Expression"
+									}
 								}
 							}
 						}
@@ -335,7 +338,10 @@
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"entityNames": "@activity('getEntityNames').output.value"
+									"entityNames": {
+										"value": "@activity('getEntityNames').output.value",
+										"type": "Expression"
+									}
 								}
 							}
 						}

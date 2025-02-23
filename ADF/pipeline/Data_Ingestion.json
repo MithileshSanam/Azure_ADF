@@ -7,7 +7,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "If Condition1",
+						"activity": "Check Ingestion Type",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -32,7 +32,7 @@
 				}
 			},
 			{
-				"name": "If Condition1",
+				"name": "Check Ingestion Type",
 				"type": "IfCondition",
 				"dependsOn": [
 					{

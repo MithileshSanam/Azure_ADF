@@ -420,7 +420,7 @@
 											"value": "@variables('max_ts')",
 											"type": "Expression"
 										},
-										"type": "DateTime"
+										"type": "Datetime"
 									},
 									"lastModifiedDateTime": {
 										"value": {
