@@ -319,7 +319,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"entity_name": {
-											"value": "@pipeline().parameters.entity",
+											"value": "@concat(pipeline().parameters.entity,'_incremental')",
 											"type": "Expression"
 										}
 									}
