@@ -262,6 +262,10 @@
 											"value": "@variables('watermark_val')",
 											"type": "Expression"
 										},
+										"modifiedDatetimeEnd": {
+											"value": "@variables('max_ts')",
+											"type": "Expression"
+										},
 										"wildcardFolderPath": {
 											"value": "@pipeline().parameters.entity",
 											"type": "Expression"
@@ -325,7 +329,14 @@
 						{
 							"name": "getWatermarkData",
 							"type": "Lookup",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "Set current_ts",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -406,7 +417,7 @@
 									},
 									"lastUpdateDate": {
 										"value": {
-											"value": "@first(activity('getMaxWatermarkTS').output.value).max_ts",
+											"value": "@variables('max_ts')",
 											"type": "Expression"
 										},
 										"type": "DateTime"
@@ -426,7 +437,14 @@
 								"secureOutput": false,
 								"secureInput": false
 							},
-							"userProperties": []
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "max_ts",
+								"value": {
+									"value": "@utcNow()",
+									"type": "Expression"
+								}
+							}
 						}
 					],
 					"ifTrueActivities": [
@@ -526,12 +544,6 @@
 			},
 			"watermark_val": {
 				"type": "String"
-			},
-			"delethisyeah": {
-				"type": "String"
-			},
-			"file_all_ts": {
-				"type": "Array"
 			},
 			"max_ts": {
 				"type": "String"
