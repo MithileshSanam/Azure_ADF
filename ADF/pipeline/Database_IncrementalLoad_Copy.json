@@ -80,7 +80,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"entity_name": {
-											"value": "@item().entityName",
+											"value": "@concat(item().entityName,'_incremental')",
 											"type": "Expression"
 										}
 									}
