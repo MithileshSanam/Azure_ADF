@@ -417,14 +417,14 @@
 									},
 									"lastUpdateDate": {
 										"value": {
-											"value": "@variables('max_ts')",
+											"value": "@formatDateTime(variables('max_ts'), 'yyyy-MM-ddTHH:mm:ss.fZ')",
 											"type": "Expression"
 										},
 										"type": "Datetime"
 									},
 									"lastModifiedDateTime": {
 										"value": {
-											"value": "@utcNow()",
+											"value": "@formatDateTime(utcNow(), 'yyyy-MM-ddTHH:mm:ss.fZ')",
 											"type": "Expression"
 										}
 									}
