@@ -67,6 +67,10 @@
 									"entity": {
 										"value": "@pipeline().parameters.entity",
 										"type": "Expression"
+									},
+									"load_type": {
+										"value": "@pipeline().parameters.load_type",
+										"type": "Expression"
 									}
 								}
 							}
