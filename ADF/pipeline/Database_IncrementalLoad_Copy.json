@@ -169,6 +169,13 @@
 										},
 										"type": "String"
 									},
+									"lastModifiedDateTime": {
+										"value": {
+											"value": "@utcNow()",
+											"type": "Expression"
+										},
+										"type": "DateTime"
+									},
 									"lastUpdateDate": {
 										"value": {
 											"value": "@first(activity('getMaxWatermarkTS').output.value).max_ts",
