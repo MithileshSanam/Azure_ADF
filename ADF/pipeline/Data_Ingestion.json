@@ -25,7 +25,7 @@
 					"waitOnCompletion": true,
 					"parameters": {
 						"entity": {
-							"value": "@pipeline().parameters.entity",
+							"value": "@concat(pipeline().parameters.entity,'_incremental')",
 							"type": "Expression"
 						}
 					}
@@ -129,7 +129,7 @@
 					"waitOnCompletion": true,
 					"parameters": {
 						"entity": {
-							"value": "@pipeline().parameters.entity",
+							"value": "@concat(pipeline().parameters.entity,'_incremental')",
 							"type": "Expression"
 						}
 					}
