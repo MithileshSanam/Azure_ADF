@@ -295,7 +295,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(pipeline().parameters.load_type,'Full Load')",
+						"value": "@startswith(toLower(pipeline().parameters.load_type),'full')",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
