@@ -7,7 +7,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Check Ingestion Type",
+						"activity": "Set entity_name",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -74,31 +74,6 @@
 									}
 								}
 							}
-						},
-						{
-							"name": "Set entity_name_incremental",
-							"description": "",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "File_To_Landing_ingestion",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "entity_name",
-								"value": {
-									"value": "@concat(pipeline().parameters.entity,'_incremental')",
-									"type": "Expression"
-								}
-							}
 						}
 					],
 					"ifTrueActivities": [
@@ -127,30 +102,6 @@
 									}
 								}
 							}
-						},
-						{
-							"name": "Set entity_name",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "SQL_To_Landing",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "entity_name",
-								"value": {
-									"value": "@pipeline().parameters.entity",
-									"type": "Expression"
-								}
-							}
 						}
 					]
 				}
@@ -158,6 +109,8 @@
 			{
 				"name": "Landing_To_Silver",
 				"type": "ExecutePipeline",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Landing_To_Bronze",
@@ -204,6 +157,8 @@
 			{
 				"name": "Landing_To_Gold",
 				"type": "ExecutePipeline",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Landing_To_Silver",
@@ -229,6 +184,31 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "Set entity_name",
+				"description": "",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Check Ingestion Type",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "entity_name",
+					"value": {
+						"value": "@if(startswith(pipeline().parameters.load_type,'incremental'),\n    concat(pipeline().parameters.entity,'_incremental'),pipeline().parameters.entity)",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -247,9 +227,6 @@
 				"type": "String"
 			},
 			"entity_name": {
-				"type": "String"
-			},
-			"d": {
 				"type": "String"
 			}
 		},
