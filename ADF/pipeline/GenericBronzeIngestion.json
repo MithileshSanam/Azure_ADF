@@ -72,6 +72,10 @@
 							"entity": {
 								"value": "@pipeline().parameters.entity",
 								"type": "Expression"
+							},
+							"dir_name": {
+								"value": "@if(endswith(pipeline().parameters.entity,'incremental'),concat(pipeline().parameters.entity,'/bronze_raw'),pipeline().parameters.entity)",
+								"type": "Expression"
 							}
 						}
 					}

@@ -248,6 +248,9 @@
 			},
 			"entity_name": {
 				"type": "String"
+			},
+			"d": {
+				"type": "String"
 			}
 		},
 		"annotations": []
