@@ -417,6 +417,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "DatabaseIngestion"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -765,6 +768,9 @@
 						"type": "array"
 					}
 				},
+				"folder": {
+					"name": "DatabaseIngestion"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -1020,6 +1026,9 @@
 					"watermark_value": {
 						"type": "String"
 					}
+				},
+				"folder": {
+					"name": "DatabaseIngestion"
 				},
 				"annotations": []
 			},
@@ -1593,6 +1602,9 @@
 						"type": "String"
 					}
 				},
+				"folder": {
+					"name": "FileBasedIngestion"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -1839,6 +1851,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "LayeredIngestion"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -2083,6 +2098,9 @@
 						"type": "string"
 					}
 				},
+				"folder": {
+					"name": "LayeredIngestion"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
@@ -2326,6 +2344,9 @@
 					"entity": {
 						"type": "string"
 					}
+				},
+				"folder": {
+					"name": "LayeredIngestion"
 				},
 				"annotations": []
 			},
