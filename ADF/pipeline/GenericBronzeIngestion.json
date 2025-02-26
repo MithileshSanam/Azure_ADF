@@ -3,85 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy_Landing_Bronze_Raw",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "start_bronze_details",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "ParquetSource",
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"enablePartitionDiscovery": false
-						},
-						"formatSettings": {
-							"type": "ParquetReadSettings"
-						}
-					},
-					"sink": {
-						"type": "ParquetSink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
-						},
-						"formatSettings": {
-							"type": "ParquetWriteSettings"
-						}
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "LandingDataset_Parquet",
-						"type": "DatasetReference",
-						"parameters": {
-							"entity_name": {
-								"value": "@pipeline().parameters.entity",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "bronze_Parquet",
-						"type": "DatasetReference",
-						"parameters": {
-							"entity": {
-								"value": "@pipeline().parameters.entity",
-								"type": "Expression"
-							},
-							"dir_name": {
-								"value": "@if(endswith(pipeline().parameters.entity,'incremental'),concat(pipeline().parameters.entity,'/bronze_raw'),pipeline().parameters.entity)",
-								"type": "Expression"
-							}
-						}
-					}
-				]
-			},
-			{
 				"name": "start_bronze_details",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [],
@@ -156,7 +77,7 @@
 				"type": "DatabricksNotebook",
 				"dependsOn": [
 					{
-						"activity": "Copy_Landing_Bronze_Raw",
+						"activity": "start_bronze_details",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -267,67 +188,6 @@
 						"errorMessage": {
 							"value": {
 								"value": "@activity('LoadBronze').output.errors[0].message",
-								"type": "Expression"
-							},
-							"type": "String"
-						},
-						"pipelineId": {
-							"value": {
-								"value": "@pipeline()?.TriggeredByPipelineRunId",
-								"type": "Expression"
-							},
-							"type": "String"
-						},
-						"pipelineName": {
-							"value": {
-								"value": "@pipeline().Pipeline",
-								"type": "Expression"
-							},
-							"type": "String"
-						},
-						"runEndTime": {
-							"value": {
-								"value": "@utcNow()",
-								"type": "Expression"
-							},
-							"type": "DateTime"
-						},
-						"runStatus": {
-							"value": "Bronze Failed",
-							"type": "String"
-						}
-					}
-				},
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabase1",
-					"type": "LinkedServiceReference"
-				}
-			},
-			{
-				"name": "End_Bronze_details_failed_copy",
-				"type": "SqlServerStoredProcedure",
-				"dependsOn": [
-					{
-						"activity": "Copy_Landing_Bronze_Raw",
-						"dependencyConditions": [
-							"Failed"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"storedProcedureName": "[dbo].[UpdatePipelineRunDetail]",
-					"storedProcedureParameters": {
-						"errorMessage": {
-							"value": {
-								"value": "@activity('Copy_Landing_Bronze_Raw').output.runError",
 								"type": "Expression"
 							},
 							"type": "String"
