@@ -266,7 +266,7 @@
 					"storedProcedureParameters": {
 						"errorMessage": {
 							"value": {
-								"value": "@activity('LoadBronze').output.runError",
+								"value": "@activity('LoadBronze').output.errors[0].message",
 								"type": "Expression"
 							},
 							"type": "String"
