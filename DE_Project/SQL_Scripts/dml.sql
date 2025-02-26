@@ -6,3 +6,5 @@ values
 ('a5920e1b-9f12-05bc-83a9-8ec6fd9a9677', '2025-10-08', 'Celeste', '2021-11-01', 'Australia', 'AUD', 'Woodlands 2016 Chardonnay', 2016, 'Chardonnay', 89, 18.75, 1);
 
 
+INSERT INTO [dbo].[Arancione] (OnlineRetailer, SalesMonth, Title, Vintage, Variety, Score, ListPrice, Quantity)
+VALUES ('Arancione', '2022-01-01', 'Biondi Santi 2001 Riserva (Brunello di Montalcino)', 2001, 'Sangiovese', 96, 400.00, 0);
