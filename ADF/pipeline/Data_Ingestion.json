@@ -216,7 +216,8 @@
 				"type": "string"
 			},
 			"load_type": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "incremental"
 			}
 		},
 		"variables": {
