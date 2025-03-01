@@ -198,6 +198,9 @@
 				"type": "String"
 			}
 		},
+		"folder": {
+			"name": "LayeredIngestion"
+		},
 		"annotations": []
 	}
 }
