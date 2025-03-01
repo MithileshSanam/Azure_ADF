@@ -4,6 +4,15 @@
   <ol>
           <li>Database Ingestion : Azure SQL DB</li>
           <li>File based Ingestion: ADLS Gen2 Container</li></ol>
+
+  <br/>
+  <b>Ingestion Structure </b>
+  <ol>
+    <li>Source to Landing: Database/File based(csv) to parquet</li>
+    <li>Bronze Ingestion: Delta using SCD1</li>
+<li> Silver Ingestion: Delta using SCD2 </li>
+    <li> Gold Ingestion: Delta using SCD1 (latest version from Silver)</li>
+  </ol>
   <b>Architecture:</b>
   <br/>FULL LOAD
   <img width="1048" alt="Screenshot 2025-03-01 at 5 55 41 PM" src="https://github.com/user-attachments/assets/1a02d23a-5a57-40f8-b027-04d1f8420412" />
