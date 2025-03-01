@@ -45,6 +45,101 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/DE_PROJ_PIPELINE')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "check ingestion layer",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(pipeline().parameters.ingestion_layer_gold_silver,'gold')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Run Silver Ingestion",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Data_Ingestion_silver",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"entity": {
+												"value": "@pipeline().parameters.entity",
+												"type": "Expression"
+											},
+											"load_type": {
+												"value": "@pipeline().parameters.load_type",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Run_Gold_Ingestion",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "GenericGoldIngestion",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"entity": {
+												"value": "@pipeline().parameters.entity",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"ingestion_layer_gold_silver": {
+						"type": "string",
+						"defaultValue": "gold"
+					},
+					"entity": {
+						"type": "string",
+						"defaultValue": "celeste"
+					},
+					"load_type": {
+						"type": "string",
+						"defaultValue": "incremental"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Data_Ingestion_silver')]",
+				"[concat(variables('factoryId'), '/pipelines/GenericGoldIngestion')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/DataBaseIngestion')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -430,7 +525,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Data_Ingestion')]",
+			"name": "[concat(parameters('factoryName'), '/Data_Ingestion_silver')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -542,8 +637,6 @@
 					{
 						"name": "Landing_To_Silver",
 						"type": "ExecutePipeline",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [
 							{
 								"activity": "Landing_To_Bronze",
@@ -588,37 +681,6 @@
 						}
 					},
 					{
-						"name": "Landing_To_Gold",
-						"type": "ExecutePipeline",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
-						"dependsOn": [
-							{
-								"activity": "Landing_To_Silver",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "GenericGoldIngestion",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"entity": {
-									"value": "@pipeline().parameters.entity",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
 						"name": "Set entity_name",
 						"description": "",
 						"type": "SetVariable",
@@ -652,7 +714,8 @@
 						"type": "string"
 					},
 					"load_type": {
-						"type": "string"
+						"type": "string",
+						"defaultValue": "incremental"
 					}
 				},
 				"variables": {
@@ -671,7 +734,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/GenericBronzeIngestion')]",
 				"[concat(variables('factoryId'), '/pipelines/GenericSilverIngestion')]",
-				"[concat(variables('factoryId'), '/pipelines/GenericGoldIngestion')]",
 				"[concat(variables('factoryId'), '/pipelines/FileBasedIngestion')]",
 				"[concat(variables('factoryId'), '/pipelines/DataBaseIngestion')]"
 			]
