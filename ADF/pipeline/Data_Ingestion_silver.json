@@ -1,5 +1,5 @@
 {
-	"name": "Data_Ingestion",
+	"name": "Data_Ingestion_silver",
 	"properties": {
 		"activities": [
 			{
@@ -149,37 +149,6 @@
 					"value": {
 						"value": "@if(endswith(pipeline().parameters.entity,'products'),'File','SQL')",
 						"type": "Expression"
-					}
-				}
-			},
-			{
-				"name": "Landing_To_Gold",
-				"type": "ExecutePipeline",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [
-					{
-						"activity": "Landing_To_Silver",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "GenericGoldIngestion",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true,
-					"parameters": {
-						"entity": {
-							"value": "@pipeline().parameters.entity",
-							"type": "Expression"
-						}
 					}
 				}
 			},

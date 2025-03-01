@@ -1,0 +1,86 @@
+{
+	"name": "DE_PROJ_PIPELINE",
+	"properties": {
+		"activities": [
+			{
+				"name": "check ingestion layer",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.ingestion_layer_gold_silver,'gold')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Run Silver Ingestion",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Data_Ingestion_silver",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"entity": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									},
+									"load_type": {
+										"value": "@pipeline().parameters.load_type",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Run_Gold_Ingestion",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "GenericGoldIngestion",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"entity": {
+										"value": "@pipeline().parameters.entity",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"ingestion_layer_gold_silver": {
+				"type": "string",
+				"defaultValue": "gold"
+			},
+			"entity": {
+				"type": "string",
+				"defaultValue": "celeste"
+			},
+			"load_type": {
+				"type": "string",
+				"defaultValue": "incremental"
+			}
+		},
+		"annotations": []
+	}
+}
