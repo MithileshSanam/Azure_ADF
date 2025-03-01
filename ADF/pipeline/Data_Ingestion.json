@@ -109,8 +109,6 @@
 			{
 				"name": "Landing_To_Silver",
 				"type": "ExecutePipeline",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Landing_To_Bronze",
