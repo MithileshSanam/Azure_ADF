@@ -1,6 +1,9 @@
 # Implementing End to End Azure pipeline using SCD1 and SCD2 for Database and File based ingestion
 ## Project Structure:
-  <b>Sources:</b><br/>
+<b> Project Description:</b><br/>
+This is an end to end data engineering project utilising file based and database ingestion for full load and incremental load. Utilizing SCD1 and SCD2 types for medallion architecture.
+<br/> Tools: Azure SQL DB, Azure Databricks, Azure Data Factory, Azure Key Vault, Azure Datalake Storage 
+  <br/><b>Sources:</b><br/>
   <ol>
           <li>Database Ingestion : Azure SQL DB</li>
           <li>File based Ingestion: ADLS Gen2 Container</li></ol>
